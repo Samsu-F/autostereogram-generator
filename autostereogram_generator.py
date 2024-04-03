@@ -161,8 +161,9 @@ def positive_int(arg_val):
 def parse_args() -> argparse.ArgumentParser:
     argparser = argparse.ArgumentParser(
                     # prog='autostereogram-generator'
+                    usage='%(prog)s [options] depthmap',
                     description='Generate ASCII Autostereograms',
-                    formatter_class=argparse.RawDescriptionHelpFormatter,
+                    formatter_class=argparse.RawTextHelpFormatter,
                     epilog=textwrap.dedent('''
                         Depth map file syntax:
                           In the depth map, the elevation of a point is represented by a number. The higher the number, the
@@ -220,30 +221,37 @@ def parse_args() -> argparse.ArgumentParser:
                                 help="""The depth map file""")  # mandatory positional argument
     default_shift = 20
     argparser.add_argument('-s', '--shift', required=False, type=positive_int, default=default_shift,
-                                help=f"""The number of characters the neutral background plane is shifted by.
-                                        This number must be greater than the largest absolute value in the depthmap
+                                help=textwrap.dedent(f"""\
+                                        The number of characters the neutral background plane is shifted by. This
+                                        number must be greater than the largest absolute value in the depth map
                                         (multiplied by the rescale-depth factor, if specified).
-                                        (default: {default_shift})""")
+                                        (default: {default_shift})"""))
     argparser.add_argument('-p', '--pattern', metavar='PATTERN-FILE', required=False, type=str,
-                                help="""The pattern file. If no pattern file is specified, a random pattern will be used.
-                                        Using a custom pattern will most likely not improve the quality of the 3D effect but
-                                        is primarily intended as an artistic choice, e.g. to use characters or words that match the
-                                        theme of the image.""")
+                                help=textwrap.dedent(f"""\
+                                        The pattern file. If no pattern file is specified, a random pattern will be
+                                        used. Using a custom pattern will most likely not improve the quality of
+                                        the 3D effect but is primarily intended as an artistic choice, e.g. to use
+                                        characters or words that match the theme of the image."""))
     argparser.add_argument('-x', '--width', required=False, type=positive_int,
-                                help="""The width of the output autostereogram. Since the shift is horizontal,
-                                        the horizontal portion of the input depth map that can be included is only this width minus SHIFT.
-                                        If the specified width is greater than the sum of SHIFT and the length of the longest line in the
-                                        depth map, the image will be centered.
-                                        (default: SHIFT + the width of the longest line, i.e. just enough to display the whole depth map)""")
+                                help=textwrap.dedent(f"""\
+                                        The width of the output autostereogram. Since the shift is horizontal, the
+                                        horizontal portion of the input depth map that can be included is only this
+                                        width minus SHIFT. If the specified width is greater than the sum of SHIFT
+                                        and the length of the longest line in the depth map, the image will be
+                                        centered. (default: SHIFT + the width of the longest line, i.e. just enough
+                                        to display the whole depth map)"""))
     argparser.add_argument('-y', '--height', required=False, type=positive_int,
-                                help="""The height of the generated autostereogram. This is equal to the number of lines of the depth map
-                                        image to include (counted from top to bottom). If the specified height is greater than
-                                        the number of lines in the depth map, the image will be centered. (default: include every line)""")
-    argparser.add_argument('-r', '--rescale-depth', required=False, type=float, default=1,
-                                help="""The rescale factor to multiply all values in the depth map by.
-                                        Note that elevation levels in the final result can only be integer values,
-                                        so if you rescale by float, the depths will be rounded to the nearest integer.
-                                        (default: 1)""")
+                                help=textwrap.dedent(f"""\
+                                        The height of the generated autostereogram. This is equal to the number of
+                                        lines of the depth map image to include (counted from top to bottom). If
+                                        the specified height is greater than the number of lines in the depth map,
+                                        the image will be centered. (default: include every line)"""))
+    argparser.add_argument('-r', '--rescale-depth', metavar='RESCALE-DEPTH', required=False, type=float, default=1,
+                                help=textwrap.dedent(f"""\
+                                        The rescale factor to multiply all values in the depth map by. Note that
+                                        elevation levels in the final result can only be integer values, so if you
+                                        rescale by a decimal, the depths will be rounded to the nearest integer.
+                                        (default: 1)"""))
     return argparser.parse_args()
 
 
