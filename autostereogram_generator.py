@@ -43,8 +43,8 @@ def parse_depth_map_file(filename: str, width: int, height: int, depth_rescale_f
                 lines = ['']*lines_above + lines + ['']*lines_below
         lines = [f"{l:<{max_line_length}}" for l in lines]  # fill all lines to the same length
         lines = [f"{l[:width]:^{width}}" for l in lines]    # trim or pad (centered) every line to wdth
-        lines = [[char_to_depth_value(char) for char in l] for l in lines] # map to integer values
-        result = [[round(x * depth_rescale_factor) for x in l] for l in lines] # rescale and round to integer
+        result = [[char_to_depth_value(char) for char in l] for l in lines] # map to integer values
+        result = [[round(x * depth_rescale_factor) for x in l] for l in result] # rescale and round to integer
         assert len(result) == height or height is None
         assert len(result) != 0
         for x in result:
@@ -53,9 +53,20 @@ def parse_depth_map_file(filename: str, width: int, height: int, depth_rescale_f
 
 
 
-# TODO
-def pattern_from_file(filename: str, height: int) -> list[list[str]]:
-    pass
+
+def pattern_from_file(filename: str, height: int, shift: int) -> list[list[str]]:
+    with open(filename, "r") as file:
+        lines = file.read().splitlines()
+        lines = lines[:height]
+        result = [[char for char in l] for l in lines]
+        for line_number, line in enumerate(result):
+            if len(line) < shift:
+                print(f"Error: Pattern too short, line {line_number} of pattern file is shorter than SHIFT.",
+                "Exiting.",
+                sep='\n',
+                file=sys.stderr)
+                sys.exit(1)
+        return result
 
 
 
@@ -95,7 +106,16 @@ def validate_shift_arg(shift: int, depthmap: list[list[int]]) -> None:
 
 
 
-# TODO implement negative elevation
+def validate_surplus(surplus: list[str], line_number: int) -> None:
+    if len(surplus) == 0:
+        print(f"Error: ran out of pattern surplus, pattern file does not contain enough characters in line {line_number}.",
+                "Exiting.",
+                sep='\n',
+                file=sys.stderr)
+        sys.exit(1)
+
+
+
 def generate_autostereogram(depth_map: list[list[int]], shift: int, pattern: list[list[str]]) -> str:
     assert len(pattern) == len(depth_map)
     assert len(depth_map) >= 1
@@ -108,12 +128,14 @@ def generate_autostereogram(depth_map: list[list[int]], shift: int, pattern: lis
         result_line += [None] * len(dml)
         for x, elevation in enumerate(dml):
             if result_line[x] is None:
+                validate_surplus(surplus, li)
                 result_line[x] = surplus[0]
                 surplus = surplus[1:]
             x_next_repetition = x + shift - elevation
             result_line[x_next_repetition] = result_line[x]
         for x in range(len(dml), len(dml) + shift): # clean up the last cycle
             if result_line[x] is None:
+                validate_surplus(surplus, li)
                 result_line[x] = surplus[0]
                 surplus = surplus[1:]
         assert None not in result_line
@@ -150,8 +172,14 @@ def parse_args() -> argparse.ArgumentParser:
                           further back than the background plane). A=-1, B=-2, ..., Z=-26.
 
                         Pattern file:
-                          ...
-                          Due to parallax ...
+                          Each line is used as the repeating pattern for the corresponding line of the generated
+                          autostereogram. Irrespective of the depthmap used, every line needs to be at least SHIFT
+                          characters long and can be arbitrarily longer. However, due to the parallax, if there is a point
+                          with greater elevation to the left of a point with lower elevation, the right eye is able to see
+                          a part of the background that is hidden to the left eye. These spots need to be filled with
+                          additional characters. Therefore a surplus of pattern characters is needed, so in practice,
+                          the lines in the pattern files need to be longer to have enough characters to fill all of the
+                          holes.
 
                         General tips for best results:
                         - The smaller your pupils are, the easier it is to see the 3D image. Turning on your room lights,
@@ -178,12 +206,14 @@ def parse_args() -> argparse.ArgumentParser:
                           3D vision but they will make it harder to switch, especially if they are used for finer details.
                           Try starting with lower absolute elevations and increasing them only if you need them to be more
                           eye-catching.
+                        - When using a custom pattern, avoid using the same characters multiple times in a row if possible,
+                          and especially avoid immediatly repeating characters.
 
                         Author & License
                           Written by Samsu-F, 2024.
                           github.com/Samsu-F
                           This software is licensed under the GNU General Public License v3.0
-                        ''') # TODO improve explanation, add explanation of pattern file
+                        ''') # TODO improve explanation
                     )
     argparser.add_argument('depthmap', type=str,
                                 help="""The depth map file""")  # mandatory positional argument
@@ -220,7 +250,6 @@ def parse_args() -> argparse.ArgumentParser:
 
 def main():
     args = parse_args()
-    print(f"{args.rescale_depth=}")
     depthmap = parse_depth_map_file(args.depthmap, args.width, args.height, args.rescale_depth)
     validate_shift_arg(args.shift, depthmap)
     if args.height is None:
@@ -230,8 +259,10 @@ def main():
     if args.pattern is None:
         pattern = random_pattern(args.height, args.width + args.shift)
     else:
-        pattern = pattern_from_file(args.pattern, args.height)
-    print(generate_autostereogram(depthmap, args.shift, pattern))
+        pattern = pattern_from_file(args.pattern, args.height, args.shift)
+
+    autostereogram = generate_autostereogram(depthmap, args.shift, pattern)
+    print(autostereogram)
 
 
 
