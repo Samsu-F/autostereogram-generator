@@ -233,7 +233,7 @@ def parse_args() -> argparse.ArgumentParser:
                                         the horizontal portion of the input depth map that can be included is only this width minus SHIFT.
                                         If the specified width is greater than the sum of SHIFT and the length of the longest line in the
                                         depthmap, the image will be centered.
-                                        (default: SHIFT + the width of the longest line, i.e. just enough to display the whole depth map)""") # TODO implement like this
+                                        (default: SHIFT + the width of the longest line, i.e. just enough to display the whole depth map)""")
     argparser.add_argument('-y', '--height', required=False, type=positive_int,
                                 help="""The height of the generated autostereogram. This is equal to the number of lines of the depthmap
                                         image  that will be included. If the given height is greater than the number of lines in the
@@ -250,14 +250,18 @@ def parse_args() -> argparse.ArgumentParser:
 
 def main():
     args = parse_args()
-    depthmap = parse_depth_map_file(args.depthmap, args.width, args.height, args.rescale_depth)
+    input_width = None  # the width of the input depthmap to use
+    if args.width is not None:
+        input_width = args.width - args.shift
+    depthmap = parse_depth_map_file(args.depthmap, input_width, args.height, args.rescale_depth)
     validate_shift_arg(args.shift, depthmap)
     if args.height is None:
         args.height = len(depthmap)
     if args.width is None:
-        args.width = len(depthmap[0]) # depthmap is guaranteed to not be empty
+        input_width = len(depthmap[0]) # depthmap is guaranteed to not be empty
+        args.width = input_width + args.shift
     if args.pattern is None:
-        pattern = random_pattern(args.height, args.width + args.shift)
+        pattern = random_pattern(args.height, args.width)
     else:
         pattern = pattern_from_file(args.pattern, args.height, args.shift)
 
