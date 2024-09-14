@@ -185,8 +185,8 @@ def parse_args() -> argparse.ArgumentParser:
                           the pattern file need to be longer than SHIFT to have enough characters to fill all of the holes.
 
                         General tips for best results:
-                        - It may be easier it is to see the 3D image if your pupils are smaller. Therefore, it may help to
-                          turn on your room lights, maximize your display brightness, and use light mode (eww!).
+                        - It may be easier to see the 3D image if your pupils are smaller. Therefore, it may help to turn
+                          on your room lights, maximize your display brightness, and use light mode (eww!).
                         - The optimal SHIFT value depends on many factors, such as display size and resolution, font and
                           font size, your distance from the display, the magnitude of the elevations, your experience with
                           autostereograms, personal preference, and many more. It is worth playing around with different
@@ -230,7 +230,7 @@ def parse_args() -> argparse.ArgumentParser:
                                 help=textwrap.dedent(f"""\
                                         The pattern file. If no pattern file is specified, a random pattern will be
                                         used. Using a custom pattern will most likely not improve the quality of
-                                        the 3D effect but is primarily intended as an artistic choice, e.g. to use
+                                        the 3D effect but is primarily intended as an artistic choice, e.g., to use
                                         characters or words that match the theme of the image."""))
     argparser.add_argument('-x', '--width', required=False, type=positive_int,
                                 help=textwrap.dedent(f"""\
@@ -238,8 +238,8 @@ def parse_args() -> argparse.ArgumentParser:
                                         horizontal portion of the input depth map that can be included is only this
                                         width minus SHIFT. If the specified width is greater than the sum of SHIFT
                                         and the length of the longest line in the depth map, the image will be
-                                        centered. (default: SHIFT + the width of the longest line, i.e. just enough
-                                        to display the whole depth map)"""))
+                                        centered. (default: SHIFT + the width of the longest line, i.e., just
+                                        enough to display the whole depth map)"""))
     argparser.add_argument('-y', '--height', required=False, type=positive_int,
                                 help=textwrap.dedent(f"""\
                                         The height of the generated autostereogram. This is equal to the number of
